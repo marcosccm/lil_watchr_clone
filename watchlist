@@ -1,0 +1,3 @@
+watch("*") { puts "todos" }
+watch("sample_*") { puts "sample_*" } 
+watch("sample_two") { puts "sample_two" } 

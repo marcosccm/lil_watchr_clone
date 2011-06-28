@@ -1,0 +1,3 @@
+watch("*") { puts "todos" }
+watch("bla") { puts "bla" } 
+watch("bla2") { puts "bla2 mudou" } 
