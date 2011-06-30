@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+require "pathname"
+
+class Stalker
+  attr_reader :paths
+
+  def initialize(script)
+    @handlers = {}
+    @paths = []
+    instance_eval(script.read)  
+  end
+
+  def stalk(path, &block)
+    Dir[path].each do |p|
+      path = Pathname.new(p)
+      add_handler(path, block) if path.file?
+    end
+  end
+  
+  def add_handler(path, block)
+    if @handlers.key? path
+      @handlers[path] << block  
+    else
+      @handlers[path] = [ block ]
+      @paths << path
+    end
+  end 
+  
+  def handle(path)
+    @handlers[path].each { |handler| handler.call(path) }
+  end
+end
+
+class Engine
+  def initialize(script_path)
+    script = Pathname.new(script_path)
+    if script.file?
+      @stalker = Stalker.new(Pathname.new(script_path))
+      init_file_sizes
+    else
+      puts "Attempt to load the script file from #{script_path}. File not found."
+      exit
+    end
+  end
+
+  def run
+    loop do
+      @sizes.each do |file, size|
+        if file.size != size 
+          @sizes[file] = file.size
+          @stalker.handle(file) 
+        end
+      end
+      sleep 1
+    end
+  end
+  
+  def init_file_sizes
+    @sizes = Hash.new(0)  
+    @stalker.paths.each do |path|  
+      @sizes[path] = path.size
+    end
+  end
+end
+
+puts "Start watching..."
+Engine.new(ARGV.first || "watchlist").run
